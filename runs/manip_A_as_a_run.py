@@ -78,20 +78,19 @@ def run(ctx):
     # setup samples and reagents
 
     # ot2lib.generate_wells_order(8, 12)[:nb_tests]:
-    dests_single = ot2func.grouped_reverse(deepwell_lw.wells(), 8)[:num_samples]  # leave controls empty
-    print("DEST", dests_single)
+    dests_w_lst = ot2func.grouped_reverse(deepwell_lw.wells(), 8)[:num_samples]  # leave controls empty
+    print("DEST", dests_w_lst)
 
     # Le truc qui tourne la géométrie dans notre sens.
     placer = ot2func.generator_for_4_racks_of_24(source_racks)
     # sources = [well for rack in source_racks for well in rack.wells()][:num_samples]
     # cet ordre n'est pas adapté.
     # deistation wells list
-    # dest_w_list = [placer.__next__() for i in range(num_samples)]
+    sample_w_lst = [placer.__next__() for _ in range(num_samples)]
 
-    # comment(dest_w_list)
 
     lys_buffer = reservoir.wells('B4')
-
+    # tip log
     tip_log = {'count': {}}
     folder_path = '/data/A'
     tip_file_path = folder_path + '/tip_log.json'
@@ -115,7 +114,7 @@ def run(ctx):
         for pip in [p1000]   # [p1000, p300]
     }
 
-    # Afficher le plan (s'affiche en début de opentrons_simulate).
+    # Display the map of the deck with labware
     ot2func.deck_summary(ctx)
 
     def pick_up(pip):
@@ -132,7 +131,7 @@ resuming.')
     # transfer lysis/binding buffer
     if experiment["plate_binding_solution"]:
         comment("Transfer Binding Solution")
-        for i, d in enumerate(dests_single):
+        for i, d in enumerate(dests_w_lst):
             ctx.comment("COM : "+str(i+1))
             pick_up(p1000)
             p1000.transfer(vol_lys_buffer, lys_buffer[i//24], d.bottom(5),
@@ -143,7 +142,7 @@ resuming.')
     # transfer samples
     if experiment["transfert_samples"] :
         comment("Transfer sample")
-        for s, d in zip(sources, dests_single):
+        for s, d in zip(sample_w_lst, dests_w_lst):
             pick_up(p1000)
             p1000.transfer(vol_sample, s.bottom(asp_height), d.bottom(5),
                           air_gap=50, new_tip='never')

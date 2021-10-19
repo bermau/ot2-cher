@@ -1,4 +1,5 @@
 # Define Reagents as objects with their properties
+import itertools
 class ReagentInLabware():
     def __init__(self,  name, flow_rate_aspirate, flow_rate_dispense, rinse, reagent_reservoir_volume, 
                  delay, num_wells, h_cono, v_fondo, tip_recycling = None , rsup_cono= None):
@@ -99,8 +100,9 @@ def pick_up(pip):
 
 # La fonction suivante remplace la fonction generate_wells_order(3, 4)
 # Attention : pour l'instant elle renvoie une liste de liste
-def list_of_index_list(rows, cols, sens='landscape'):
-    """return a list of list of integers representing the indexes to select wells in the right order.
+def list_of_index_lists(rows, cols, sens='landscape'):
+    """return a list of lists of integers representing the indexes to select
+    wells in our local right order.
 
     rows: number of rows
     cols : number of columns
@@ -108,12 +110,13 @@ def list_of_index_list(rows, cols, sens='landscape'):
     sens :
         'lanscape' : plate is filled row b row (from A1 to A12, then B1 to B12)...
         'portrait' : plate is filled col by col, from H1 to A1 then H2 to A2...
+    return : a list of lists
 
-    >>> list_of_index_list(3, 4)
+    >>> list_of_index_lists(3, 4)
     [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11]]
-    >>> list_of_index_list(2, 3)
+    >>> list_of_index_lists(2, 3)
     [[0, 1, 2], [3, 4, 5]]
-    >>> list_of_index_list(2, 3, sens='portrait')
+    >>> list_of_index_lists(2, 3, sens='portrait')
     [(3, 0), (4, 1), (5, 2)]
     """
     numbers = list(range(rows * cols))
@@ -133,15 +136,13 @@ def list_of_index_list(rows, cols, sens='landscape'):
 #  disposition of racks on the OT :
     # rack 1  | rack 2
     # rack 3  | rack 4
-
 def generator_for_4_racks_of_24(racks):
-    """up to 96 tubes are loaded in 4 24 tubes racks. 
-    The first tube is H1, in rack3, first bottom left, 
-    The second tube is G1, in rack3, second bottom left, 
-    fith tube is D1, in rack 1, first bottom left...
-    
+    """up to 96 tubes are loaded in 4 24 tubes racks.
+    The first tube is H1 in rack3 (first bottom left if the plate is in landscape position),
+    The second tube is G1 in rack3, fifth tube is D1 in rack 1, sixth is C1 in rack 1...
+
     racks : a list of 4 racks Labware
-    Returns a well.
+    Returns : a single Well each time.
 
     How to use this function ?
 
@@ -150,28 +151,32 @@ def generator_for_4_racks_of_24(racks):
     #  disposition of racks on the OT :
     # rack 1  | rack 2
     # rack 3  | rack 4
+    # in ou lab (CHER), wells are used in the following order : D1 of rack3, C1 of rack3, B1 of rack3,
+     A1 of rack3, then D1 of rack 1 ...
+    TODO explaination
 
     source_racks  = [ source1, source2, source3, source4)
     placer = ot2lib.generator_for_4_racks_of_24(source_racks)
-    [ input_well = placer.__next__() for i in range(N) ]
+    [ input_well = placer.__next__() for _ in range(N) ]
     """
     counter = 0
-    
+
     for rack in racks:
         rack.used_pos = 0
-        rack.ordered_wells = list_of_index_list(4, 6)
-        
-    for rack in [racks[2], racks[0]]*6:
-        for i in range(4):
-            counter += 1       
-            rack.used_pos += 1
-            yield rack.wells()[rack.ordered_wells[rack.used_pos-1]]  
- 
-    for rack in [racks[3], racks[1]]*6:
+        lst = list_of_index_lists(4, 6)  # fournit une [list, list, list]
+        rack.ordered_wells = grouped_reverse(list(itertools.chain(*lst)), 4)  # convert to simple list
+
+    for rack in [racks[2], racks[0]] * 6:
         for i in range(4):
             counter += 1
             rack.used_pos += 1
-            yield rack.wells()[rack.ordered_wells[rack.used_pos-1]]
+            yield rack.wells()[rack.ordered_wells[rack.used_pos - 1]]
+
+    for rack in [racks[3], racks[1]] * 6:
+        for i in range(4):
+            counter += 1
+            rack.used_pos += 1
+            yield rack.wells()[rack.ordered_wells[rack.used_pos - 1]]
 
 def chunks(lst, n_max):
     """Yield successive n_max-sized chunks from lst.
