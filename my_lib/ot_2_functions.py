@@ -168,11 +168,15 @@ def generator_for_4_racks_of_24(racks):
             counter += 1
             rack.used_pos += 1
             yield rack.wells()[rack.ordered_wells[rack.used_pos-1]]
-            
-def chunks(lst, n):
-    """Yield successive n-sized chunks from lst."""
-    for i in range(0, len(lst), n):
-        yield lst[i:i + n]
+
+def chunks(lst, n_max):
+    """Yield successive n_max-sized chunks from lst.
+    Last item cant have less than n_max elements
+    >>> list(chunks(['a', 'b', 'c', 'd', 'e', 'f', 'g'], 3))
+    [['a', 'b', 'c'], ['d', 'e', 'f'], ['g']]
+    """
+    for i in range(0, len(lst), n_max):
+        yield lst[i:i + n_max]
         
 def reverse_order_wells(rack, wells_per_columns):
     """BLA BLA"""
