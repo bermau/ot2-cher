@@ -140,7 +140,7 @@ def list_of_index_list(rows, cols, sens='landscape'):
 
 # Repartition of samples of several racks
 # Case of 4  4x6 racks
-#  disposition of racks : 
+#  disposition of racks on the OT :
     # rack 1  | rack 2
     # rack 3  | rack 4
 
@@ -150,7 +150,21 @@ def generator_for_4_racks_of_24(racks):
     The second tube is G1, in rack3, second bottom left, 
     fith tube is D1, in rack 1, first bottom left...
     
-    Returns a well"""
+    racks : a list of 4 racks Labware
+    Returns a well.
+
+    How to use this function ?
+
+    # Repartition of samples of several racks
+    # Case of 4  4x6 racks
+    #  disposition of racks on the OT :
+    # rack 1  | rack 2
+    # rack 3  | rack 4
+
+    source_racks  = [ source1, source2, source3, source4)
+    placer = ot2lib.generator_for_4_racks_of_24(source_racks)
+    [ input_well = placer.__next__() for i in range(N) ]
+    """
     counter = 0
     
     for rack in racks:
@@ -189,10 +203,8 @@ def grouped_reverse(lst: list, group_size: int) -> list:
 
     example of use :
     grouped_reverse(source_racks[0].wells(), 4) # where source_racks[0] is a LabWare
-
-
     """
-    return [elt for line in chunks(lst, wells_per_columns) for elt in line[:: -1]]
+    return [elt for line in chunks(lst, group_size) for elt in line[:: -1]]
 
 # DECK  SUMMARY : 
 def labware_short_name(string, nb_cars):
