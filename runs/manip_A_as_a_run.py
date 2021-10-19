@@ -1,6 +1,8 @@
-#Manipulation pour CHER
+# Manipulation pour CHER
 
-num_samples = 2
+num_samples_without_ctrl = 2
+
+
 def get_values(*names):
     import json
     _all_values = json.loads("""{
@@ -8,6 +10,7 @@ def get_values(*names):
     "vol_sample":200,
     "vol_lys_buffer":260,
     "asp_height":5,
+    "add_neg":1,
     "p300_mount":"right","p300_type":"p300_single_gen2",
     "p1000_mount":"left","p1000_type":"p1000_single_gen2","tip_track":false}""")
     return [_all_values[n] for n in names]
@@ -16,7 +19,7 @@ import json
 import os
 
 os.sys.path.insert(1, os.path.realpath("../my_lib/"))
-import ot_2_functions as ot2lib
+import ot_2_functions as ot2func
 
 # metadata
 metadata = {
@@ -29,16 +32,19 @@ Protocol for Kingfisher sample setup (A) - Viral/Pathogen II Kit (ref A48383)
 Adapted from covid19clinic project"""
 }
 
+
 def run(ctx):
-    [vol_sample, vol_lys_buffer,  asp_height,
+    [vol_sample, vol_lys_buffer,  asp_height, add_neg,
      p300_mount, p300_type, p1000_mount, p1000_type,
      tip_track] = get_values(
         'vol_sample', 'vol_lys_buffer',
-        'asp_height', 'p300_mount', 'p300_type', 'p1000_mount', 'p1000_type',
+        'asp_height', 'add_neg','p300_mount', 'p300_type', 'p1000_mount', 'p1000_type',
         'tip_track')
-    experiment = {"plate_binding_solution" : False,
-                  "transfert_samples" : True}
+    experiment = {"plate_binding_solution": True,
+                  "transfert_samples": False}
     # num_samples = int(input("nb tests"))
+    num_samples = num_samples_without_ctrl + add_neg
+
     ctx.pause("Ce programme est prévu pour {} tests".format(num_samples))
     ctx.pause("Confirmer (Resume) pour démarrer {} tests, sinon appuyer sur Stop".format(num_samples))
 
@@ -48,18 +54,16 @@ def run(ctx):
         ctx.comment(msg)
         ctx.comment("*" * l)
 
-    # load labware
-    dest_plate = ctx.load_labware(
-        'nest_96_wellplate_2ml_deep', '3', 'Deepwell plate')
-    # On installe 4 supports de 24 Eppendorf
-
-    # sources of samples
-    # slots snot numérotés ainsi :
-    #    1 | 2
-    #    3 | 4
+    # load labware (lw)  #  TODO : mettre la vraie définition de plaque de Thermo
+    deepwell_lw = ctx.load_labware('nest_96_wellplate_2ml_deep', '3', 'Deepwell plate')
+    # sources of samples : 4 racks of Eppendorf 
+    # slots sont numérotés et disposés ainsi
+    #    rack 1 | rack 2
+    #    rack 3 | rack 4
     rack4in1_name = 'opentrons_24_tuberack_eppendorf_1.5ml_safelock_snapcap'
     source_racks = [ctx.load_labware(rack4in1_name, slot, 'Echantillons ' + str(i + 1))
                     for i, slot in enumerate(['4', '5', '1', '2'])]
+    
     # pour solution de binding/lyse
     reservoir = ctx.load_labware('opentrons_10_tuberack_falcon_4x50ml_6x15ml_conical', '6',
                                  'reagent reservoir')
@@ -72,19 +76,19 @@ def run(ctx):
                                 tip_racks=tipracks1000)
 
     # setup samples and reagents
-    sources = [
-        well for rack in source_racks for well in rack.wells()][:num_samples]
-    print(sources)
 
     # ot2lib.generate_wells_order(8, 12)[:nb_tests]:
-    dests_single = dest_plate.wells()[:num_samples]  # leave controls empty
-
-
-    print(dests_single)
+    dests_single = ot2func.grouped_reverse(deepwell_lw.wells(), 8)[:num_samples]  # leave controls empty
+    print("DEST", dests_single)
 
     # Le truc qui tourne la géométrie dans notre sens.
-    placer = ot2lib.generator_for_4_racks_of_24(source_racks)
+    placer = ot2func.generator_for_4_racks_of_24(source_racks)
+    # sources = [well for rack in source_racks for well in rack.wells()][:num_samples]
+    # cet ordre n'est pas adapté.
+    # deistation wells list
+    # dest_w_list = [placer.__next__() for i in range(num_samples)]
 
+    # comment(dest_w_list)
 
     lys_buffer = reservoir.wells('B4')
 
@@ -99,10 +103,6 @@ def run(ctx):
                     tip_log['count'][p1000] = data['tips1000']
                 else:
                     tip_log['count'][p1000] = 0
-                if 'tips300' in data:
-                    tip_log['count'][p300] = data['tips300']
-                else:
-                    tip_log['count'][p300] = 0
     else:
         tip_log['count'] = {p1000: 0}      # tip_log['count'] = {p1000: 0, p300: 0}
 
@@ -114,8 +114,9 @@ def run(ctx):
         pip: len(tip_log['tips'][pip])
         for pip in [p1000]   # [p1000, p300]
     }
+
     # Afficher le plan (s'affiche en début de opentrons_simulate).
-    ot2lib.deck_summary(ctx)
+    ot2func.deck_summary(ctx)
 
     def pick_up(pip):
         nonlocal tip_log
@@ -139,7 +140,7 @@ resuming.')
             p1000.air_gap(50) # air_gap avant de retourner à la poubelle
             p1000.drop_tip()
 
-    # transfer sample
+    # transfer samples
     if experiment["transfert_samples"] :
         comment("Transfer sample")
         for s, d in zip(sources, dests_single):

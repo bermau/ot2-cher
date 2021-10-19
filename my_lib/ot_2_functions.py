@@ -83,17 +83,7 @@ def pick_up(pip):
             pip.reset_tipracks()
             tip_track['counts'][pip] = 0
     pip.pick_up_tip()       
-    
-# def find_side(col):
-#     '''
-#     Detects if the current column has the magnet at its left or right side
-#     '''
-#     if col % 2 == 0:
-#         side = -1  # left
-#     else:
-#         side = 1
-#     return side
-#
+
 #####################################################
 ## Functions to manage the local order of run
 #####################################################
@@ -169,7 +159,7 @@ def generator_for_4_racks_of_24(racks):
     
     for rack in racks:
         rack.used_pos = 0
-        rack.ordered_wells = generate_wells_order(4, 6)
+        rack.ordered_wells = list_of_index_list(4, 6)
         
     for rack in [racks[2], racks[0]]*6:
         for i in range(4):
@@ -191,7 +181,6 @@ def chunks(lst, n_max):
     """
     for i in range(0, len(lst), n_max):
         yield lst[i:i + n_max]
-        
 
 # reverse_order_wells is replace by following
 def grouped_reverse(lst: list, group_size: int) -> list:
