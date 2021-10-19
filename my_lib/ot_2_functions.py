@@ -178,10 +178,21 @@ def chunks(lst, n_max):
     for i in range(0, len(lst), n_max):
         yield lst[i:i + n_max]
         
-def reverse_order_wells(rack, wells_per_columns):
-    """BLA BLA"""
-    return [ elt for line in chunks(rack.wells(), wells_per_columns) for elt in line[: : -1]]
 
+# reverse_order_wells is replace by following
+def grouped_reverse(lst: list, group_size: int) -> list:
+    """number of row is synonymous of columns.
+    reverse each group of group_size elements. group_size is usually the number of rows.
+    grouped_reverse
+    >>> grouped_reverse(list("ABCDEFGH"), 4)
+    ['D', 'C', 'B', 'A', 'H', 'G', 'F', 'E']
+
+    example of use :
+    grouped_reverse(source_racks[0].wells(), 4) # where source_racks[0] is a LabWare
+
+
+    """
+    return [elt for line in chunks(lst, wells_per_columns) for elt in line[:: -1]]
 
 # DECK  SUMMARY : 
 def labware_short_name(string, nb_cars):
