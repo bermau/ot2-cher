@@ -1,6 +1,6 @@
 # Manipulation pour CHER
 
-num_samples_without_ctrl = 2
+num_samples_without_ctrl = 3
 
 
 def get_values(*names):
@@ -15,6 +15,7 @@ def get_values(*names):
     "p1000_mount":"left","p1000_type":"p1000_single_gen2","tip_track":false}""")
     return [_all_values[n] for n in names]
 
+from opentrons.types import Point
 import json
 import os
 
@@ -45,8 +46,9 @@ def run(ctx):
     # num_samples = int(input("nb tests"))
     num_samples = num_samples_without_ctrl + add_neg
 
-    ctx.pause("Ce programme est prévu pour {} tests".format(num_samples))
-    ctx.pause("Confirmer (Resume) pour démarrer {} tests, sinon appuyer sur Stop".format(num_samples))
+    ctx.pause("Ce programme est prévu pour {} tests (hors contrôles)".format(num_samples_without_ctrl))
+    ctx.pause("Tout le matériel doit être en place.")
+    ctx.pause("Confirmer (Resume) pour démarrer {} le protocole, sinon appuyer sur Stop".format(num_samples))
 
     def comment(msg):
         l = len(msg)
@@ -144,7 +146,8 @@ resuming.')
         comment("Transfer sample")
         for s, d in zip(sample_w_lst, dests_w_lst):
             pick_up(p1000)
-            p1000.transfer(vol_sample, s.bottom(asp_height), d.bottom(5),
+            # Régler la hauteur avec : .bottom().move(Point(x=(-1.5))))
+            p1000.transfer(vol_sample, s.bottom(asp_height).move(Point(x=(-1.5))), d.bottom(10),
                           air_gap=50, new_tip='never')
             p1000.air_gap(50)
             p1000.drop_tip()
