@@ -322,8 +322,9 @@ def run(ctx):
 
     # setup samples and reagents
 
-    # ot2lib.generate_wells_order(8, 12)[:nb_tests]:
-    dests_w_lst = grouped_reverse(deepwell_lw.wells(), 8)[:num_samples]  # leave controls empty
+    # destination wells list : Destination sur la plaque de DeepWell
+    # leave controls empty
+    dests_w_lst = grouped_reverse(deepwell_lw.wells(), 8)[:num_samples]
     print("DEST", dests_w_lst)
 
     # Le truc qui tourne la géométrie dans notre sens.
