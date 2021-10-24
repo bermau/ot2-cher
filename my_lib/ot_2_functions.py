@@ -129,6 +129,8 @@ def list_of_index_lists(rows, cols, sens='landscape'):
     elif sens == 'portrait':
         return list(list(zip(ret[1], ret[0])))
 
+
+
 ### Créer un générateur
 
 # Repartition of samples of several racks
