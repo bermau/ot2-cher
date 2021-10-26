@@ -19,3 +19,13 @@ La cellule suivante est pour exécuter le run().
 La suivante permet de voir le log de l'objet ctx.
 
 En entête une variable permet d'indiquer si l'utilisateur utilise un vrai OT ou bien utilise le simulateur.
+
+
+Comment faire évoluter le code : 
+ - modifier le programme monorun acec Pycharm. 
+ - on peut l'éxécuter en tant que ficier python.
+ - on peut l'exécuter avec opentrons_simulate.
+ - le sauver (importer)
+ - ouvrir le JNB
+ - activer la ligne %load.
+ - actier les autres cellules du JNB.
