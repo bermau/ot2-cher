@@ -84,7 +84,7 @@ def run(ctx):
     print("DEST", dests_w_lst)
 
     # Le truc qui tourne la géométrie dans notre sens.
-    placer = ot2func.generator_for_4_racks_of_24(source_racks)
+    placer = ot2func.well_generator_for_4_racks_of_24(source_racks)
     # sources = [well for rack in source_racks for well in rack.wells()][:num_samples]
     # cet ordre n'est pas adapté.
     # deistation wells list

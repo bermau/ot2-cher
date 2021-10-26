@@ -131,7 +131,7 @@ def list_of_index_lists(rows, cols, sens='landscape'):
 
 
 # Repartition of samples on several racks
-def generator_for_4_racks_of_24(racks):
+def well_generator_for_4_racks_of_24(racks):
     """Up to 96 tubes are loaded in 4 24 tubes racks.
     In our lab, the first tube is H1 in rack3 (first bottom left if the plate is in landscape position),
     The second tube is G1 in rack3, fifth tube is D1 in rack 1, sixth is C1 in rack 1...
@@ -280,8 +280,7 @@ def run(ctx):
         ctx.comment(msg)
         ctx.comment("*" * longueur)
 
-    # load labware (lw)  #  TODO : mettre la vraie définition de plaque de Thermo
-    deepwell_lw = ctx.load_labware('nest_96_wellplate_2ml_deep', '3', 'Deepwell plate')
+
     # sources of samples : 4 racks of Eppendorf
     # slots sont numérotés et disposés ainsi
     #    rack 1 | rack 2
@@ -302,16 +301,17 @@ def run(ctx):
 
     # setup samples and reagents
 
-    # destination wells list. Destination sur la plaque de DeepWell
-    # leave controls empty
+    # destination wells list. Destination sur la plaque de DeepWell. Leave controls empty
+
+    # load labware (lw)  #  TODO : mettre la vraie définition de plaque de Thermo
+    # lw : stads for labware
+    deepwell_lw = ctx.load_labware('nest_96_wellplate_2ml_deep', '3', 'Deepwell plate')
+    # *_w_list : stands for "list of Wells"
     dests_w_lst = grouped_reverse(deepwell_lw.wells(), 8)[:num_samples]
     print("DEST", dests_w_lst)
 
-    # Le truc qui tourne la géométrie dans notre sens.
-    placer = generator_for_4_racks_of_24(source_racks)
-    # sources = [well for rack in source_racks for well in rack.wells()][:num_samples]
-    # cet ordre n'est pas adapté.
-    # deistation wells list
+    # Ceci adapte l'ordre d'utilisation des tubes au sens portrait.
+    placer = well_generator_for_4_racks_of_24(source_racks)
     sample_w_lst = [placer.__next__() for _ in range(num_samples)]
 
     lys_buffer = reservoir.wells('B4')
@@ -342,6 +342,7 @@ def run(ctx):
     # Display the map of the deck with labware
     deck_summary(ctx)
 
+    # Unused
     def pick_up(pip):
         nonlocal tip_log
         if tip_log['count'][pip] == tip_log['max'][pip]:
