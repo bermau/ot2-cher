@@ -3,7 +3,7 @@
 Après de nombreux essais, je pense que le code exécutable par l'OT-2 doit être sous forme de Jupyter-notebook (JNB). 
 En effet, seule cette méthode permet une interaction entre le code et l'utilisateur.
 
-Mon problème est que les fichiers de type jupyter-notebook ne sont pas faciles à suivre avec git.
+Problème : les fichiers de jupyter-notebook ne sont pas faciles à suivre avec git.
 
 Je vais donc conserver mon script sous format d'un fichier python dans lequel on définit la fonction run().
 
@@ -19,3 +19,12 @@ La cellule suivante est pour exécuter le run().
 La suivante permet de voir le log de l'objet ctx.
 
 En entête une variable permet d'indiquer si l'utilisateur utilise un vrai OT ou bien utilise le simulateur.
+
+Comment faire évoluer le code : 
+ - modifier le programme monorun acvec Pycharm. 
+ - on peut l'exécuter en tant que fichier python.
+ - on peut l'exécuter avec opentrons_simulate.
+ - le sauver (importer)
+ - ouvrir le JNB
+ - activer la ligne %load.
+ - activer les autres cellules du JNB.

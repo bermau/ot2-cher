@@ -1,18 +1,19 @@
-# Manipulation pour CHER
+# Manipulation pour Laboratoire du Centre hospitalier Emile Roux (CHER)
 # I included all my tools previously written in ot2_functions.py
-
-num_samples_without_ctrl = 3
 
 # Define Reagents as objects with their properties
 import itertools
+
 from opentrons.types import Point
 import json
 import os
 
-class ReagentInLabware():
+num_samples_without_ctrl = 3
+
+# Unused
+class ReagentInLabware:
     def __init__(self, name, flow_rate_aspirate, flow_rate_dispense, rinse, reagent_reservoir_volume,
                  delay, num_wells, h_cono, v_fondo, tip_recycling=None, rsup_cono=None):
-        # note : Le none de tip_recycling été noté 'note'
         self.name = name
         self.flow_rate_aspirate = flow_rate_aspirate
         self.flow_rate_dispense = flow_rate_dispense
@@ -30,26 +31,13 @@ class ReagentInLabware():
         self.rsup_cono = rsup_cono
         self.update()
 
-    def set_volume(vol):
+    def set_volume(self, vol):
         self.vol_well = vol
 
     def update(self):
         pass
 
-
-# Custom functions
-def generate_source_table(source):
-    """
-    Concatenate the wells from the different origin racks
-    """
-    for rack_number in range(len(source)):
-        if rack_number == 0:
-            s = source[rack_number].wells()
-        else:
-            s = s + source[rack_number].wells()
-    return s
-
-
+# Unused
 def calc_height(reagent, cross_section_area, aspirate_volume, min_height=0.5):
     global ctx  # ????
     ctx.comment('Remaining volume ' + str(reagent.vol_well) +
@@ -97,7 +85,7 @@ def pick_up(pip):
 
 
 #####################################################
-## Functions to manage the local order of run
+## Functions to manage the CHER local order of run
 #####################################################
 
 # Par défaut, la fonction wells() affiche les puits ainsi :
@@ -106,11 +94,10 @@ def pick_up(pip):
 # generate the order of the wells walking bottom to top then left to right
 # Order is : generate_wells_order(8,12) : [7, 6, 5, 4, 3, 2, 1, 0, 15, 14, 13, 12,
 # 11, 10, 9, 8, ...
-# fist position (bottom left is 0)
+# first position (bottom left is 0)
 # return and index
 
 # La fonction suivante remplace la fonction generate_wells_order(3, 4)
-# Attention : pour l'instant elle renvoie une liste de liste
 def list_of_index_lists(rows, cols, sens='landscape'):
     """return a list of lists of integers representing the indexes to select
     wells in our local right order.
@@ -121,14 +108,14 @@ def list_of_index_lists(rows, cols, sens='landscape'):
     sens :
         'lanscape' : plate is filled row b row (from A1 to A12, then B1 to B12)...
         'portrait' : plate is filled col by col, from H1 to A1 then H2 to A2...
-    return : a list of lists
+    return : a list integers
 
     >>> list_of_index_lists(3, 4)
-    [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11]]
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     >>> list_of_index_lists(2, 3)
-    [[0, 1, 2], [3, 4, 5]]
+    [0, 1, 2, 3, 4, 5]
     >>> list_of_index_lists(2, 3, sens='portrait')
-    [(3, 0), (4, 1), (5, 2)]
+    [3, 0, 4, 1, 5, 2]
     """
     numbers = list(range(rows * cols))
     ret = []
@@ -136,21 +123,17 @@ def list_of_index_lists(rows, cols, sens='landscape'):
         ret.append(numbers[i:i + cols])
 
     if sens == 'landscape':
-        return ret
+        pass
     elif sens == 'portrait':
-        return list(list(zip(ret[1], ret[0])))
+        ret = list(list(zip(ret[1], ret[0])))
+    # next list turn a list of lists into a list of simple elements.
+    return list(itertools.chain(*ret))
 
 
-### Créer un générateur
-
-# Repartition of samples of several racks
-# Case of 4  4x6 racks
-#  disposition of racks on the OT :
-# rack 1  | rack 2
-# rack 3  | rack 4
+# Repartition of samples on several racks
 def generator_for_4_racks_of_24(racks):
-    """up to 96 tubes are loaded in 4 24 tubes racks.
-    The first tube is H1 in rack3 (first bottom left if the plate is in landscape position),
+    """Up to 96 tubes are loaded in 4 24 tubes racks.
+    In our lab, the first tube is H1 in rack3 (first bottom left if the plate is in landscape position),
     The second tube is G1 in rack3, fifth tube is D1 in rack 1, sixth is C1 in rack 1...
 
     racks : a list of 4 racks Labware
@@ -163,20 +146,20 @@ def generator_for_4_racks_of_24(racks):
     #  disposition of racks on the OT :
     # rack 1  | rack 2
     # rack 3  | rack 4
-    # in ou lab (CHER), wells are used in the following order : D1 of rack3, C1 of rack3, B1 of rack3,
+    # in our lab (CHER), wells are used in the following order : D1 of rack3, C1 of rack3, B1 of rack3,
      A1 of rack3, then D1 of rack 1 ...
-    TODO explaination
+    # The wells() method from opentrons.protocol_api.labware.Labware return a list of index in the following order :
+    # A1, B2, C3... then A2, B2, C2...
 
-    source_racks  = [ source1, source2, source3, source4)
+    source_racks  = [source1, source2, source3, source4]
     placer = generator_for_4_racks_of_24(source_racks)
-    [ input_well = placer.__next__() for _ in range(N) ]
+    wells_lst = [ input_well = placer.__next__() for _ in range(N) ]
     """
     counter = 0
-
     for rack in racks:
         rack.used_pos = 0
-        lst = list_of_index_lists(4, 6)  # fournit une [list, list, list]
-        rack.ordered_wells = grouped_reverse(list(itertools.chain(*lst)), 4)  # convert to simple list
+        lst = list_of_index_lists(4, 6)  # fournit une liste
+        rack.ordered_wells = grouped_reverse(lst, 4)  # convert to simple list
 
     for rack in [racks[2], racks[0]] * 6:
         for i in range(4):
@@ -202,10 +185,11 @@ def chunks(lst, n_max):
 
 
 # reverse_order_wells is replace by following
+# Cette fonction permet de corriger l'ordre d'utilisation des puits pour notre labo.
 def grouped_reverse(lst: list, group_size: int) -> list:
-    """number of row is synonymous of columns.
-    reverse each group of group_size elements. group_size is usually the number of rows.
-    grouped_reverse
+    """Reverse each group of group_size elements in a list.
+
+    group_size is usually the number of rows.
     >>> grouped_reverse(list("ABCDEFGH"), 4)
     ['D', 'C', 'B', 'A', 'H', 'G', 'F', 'E']
 
@@ -215,10 +199,10 @@ def grouped_reverse(lst: list, group_size: int) -> list:
     return [elt for line in chunks(lst, group_size) for elt in line[:: -1]]
 
 
-# DECK  SUMMARY :
+# DECK  SUMMARY : display a graphical aspect of the deck.
 def labware_short_name(string, nb_cars):
-    """Return a max of nb_cars. Or return beginning and end of the
-    string if string is too long
+    """Return a max of nb_cars, the beginning and end of the
+    string if the tring is too long
 
     >>> labware_short_name("atoolongnametoenterinthislittlecase", 25)
     'atoolongna...islittlecase'
@@ -256,10 +240,8 @@ def get_values(*names):
     "vol_lys_buffer":260,
     "asp_height":5,
     "add_neg":1,
-    "p300_mount":"right","p300_type":"p300_single_gen2",
     "p1000_mount":"left","p1000_type":"p1000_single_gen2","tip_track":false}""")
     return [_all_values[n] for n in names]
-
 
 
 # os.sys.path.insert(1, os.path.realpath("../my_lib/"))
@@ -278,51 +260,49 @@ Adapted from covid19clinic project"""
 
 
 def run(ctx):
-    [vol_sample, vol_lys_buffer,  asp_height, add_neg,
-     p300_mount, p300_type, p1000_mount, p1000_type,
+    [vol_sample, vol_lys_buffer, asp_height, add_neg,
+     p1000_mount, p1000_type,
      tip_track] = get_values(
         'vol_sample', 'vol_lys_buffer',
-        'asp_height', 'add_neg','p300_mount', 'p300_type', 'p1000_mount', 'p1000_type',
+        'asp_height', 'add_neg', 'p1000_mount', 'p1000_type',
         'tip_track')
     experiment = {"plate_binding_solution": True,
                   "transfert_samples": False}
-    # num_samples = int(input("nb tests"))
     num_samples = num_samples_without_ctrl + add_neg
 
     ctx.pause("Ce programme est prévu pour {} tests (hors contrôles)".format(num_samples_without_ctrl))
     ctx.pause("Tout le matériel doit être en place.")
-    ctx.pause("Confirmer (Resume) pour démarrer {} le protocole, sinon appuyer sur Stop".format(num_samples))
+    ctx.pause("Confirmer (Resume) pour démarrer {} puits pour le protocole, sinon appuyer sur Stop".format(num_samples))
 
     def comment(msg):
-        l = len(msg)
-        ctx.comment("*" * l)
+        longueur = len(msg)
+        ctx.comment("*" * longueur)
         ctx.comment(msg)
-        ctx.comment("*" * l)
+        ctx.comment("*" * longueur)
 
     # load labware (lw)  #  TODO : mettre la vraie définition de plaque de Thermo
     deepwell_lw = ctx.load_labware('nest_96_wellplate_2ml_deep', '3', 'Deepwell plate')
-    # sources of samples : 4 racks of Eppendorf 
+    # sources of samples : 4 racks of Eppendorf
     # slots sont numérotés et disposés ainsi
     #    rack 1 | rack 2
     #    rack 3 | rack 4
     rack4in1_name = 'opentrons_24_tuberack_eppendorf_1.5ml_safelock_snapcap'
     source_racks = [ctx.load_labware(rack4in1_name, slot, 'Echantillons ' + str(i + 1))
                     for i, slot in enumerate(['4', '5', '1', '2'])]
-    
     # pour solution de binding/lyse
     reservoir = ctx.load_labware('opentrons_10_tuberack_falcon_4x50ml_6x15ml_conical', '6',
                                  'reagent reservoir')
-
+    # Tips
     tipracks1000 = [ctx.load_labware('opentrons_96_tiprack_1000ul', slot, 'Pointes 1000µl')
                     for slot in ['10']]
 
-    # load pipette
+    # Pipette
     p1000 = ctx.load_instrument(p1000_type, p1000_mount,
                                 tip_racks=tipracks1000)
 
     # setup samples and reagents
 
-    # destination wells list : Destination sur la plaque de DeepWell
+    # destination wells list. Destination sur la plaque de DeepWell
     # leave controls empty
     dests_w_lst = grouped_reverse(deepwell_lw.wells(), 8)[:num_samples]
     print("DEST", dests_w_lst)
@@ -333,7 +313,6 @@ def run(ctx):
     # cet ordre n'est pas adapté.
     # deistation wells list
     sample_w_lst = [placer.__next__() for _ in range(num_samples)]
-
 
     lys_buffer = reservoir.wells('B4')
     # tip log
@@ -349,7 +328,7 @@ def run(ctx):
                 else:
                     tip_log['count'][p1000] = 0
     else:
-        tip_log['count'] = {p1000: 0}      # tip_log['count'] = {p1000: 0, p300: 0}
+        tip_log['count'] = {p1000: 0}  # tip_log['count'] = {p1000: 0, p300: 0}
 
     tip_log['tips'] = {
         p1000: [tip for rack in tipracks1000 for tip in rack.wells()],
@@ -357,7 +336,7 @@ def run(ctx):
     }
     tip_log['max'] = {
         pip: len(tip_log['tips'][pip])
-        for pip in [p1000]   # [p1000, p300]
+        for pip in [p1000]  # [p1000, p300]
     }
 
     # Display the map of the deck with labware
@@ -373,29 +352,27 @@ resuming.')
         pip.pick_up_tip(tip_log['tips'][pip][tip_log['count'][pip]])
         tip_log['count'][pip] += 1
 
-
     # transfer lysis/binding buffer
     if experiment["plate_binding_solution"]:
         comment("Transfer Binding Solution")
         for i, d in enumerate(dests_w_lst):
-            ctx.comment("COM : "+str(i+1))
+            ctx.comment("COM : " + str(i + 1))
             pick_up(p1000)
-            p1000.transfer(vol_lys_buffer, lys_buffer[i//24], d.bottom(5),
+            p1000.transfer(vol_lys_buffer, lys_buffer[i // 24], d.bottom(5),
                            air_gap=50, new_tip='never')
-            p1000.air_gap(50) # air_gap avant de retourner à la poubelle
+            p1000.air_gap(50)  # air_gap avant de retourner à la poubelle
             p1000.drop_tip()
 
     # transfer samples
-    if experiment["transfert_samples"] :
+    if experiment["transfert_samples"]:
         comment("Transfer sample")
         for s, d in zip(sample_w_lst, dests_w_lst):
             pick_up(p1000)
             # Régler la hauteur avec : .bottom().move(Point(x=(-1.5))))
             p1000.transfer(vol_sample, s.bottom(asp_height).move(Point(x=(-1.5))), d.bottom(10),
-                          air_gap=50, new_tip='never')
+                           air_gap=50, new_tip='never')
             p1000.air_gap(50)
             p1000.drop_tip()
-
 
     ctx.comment('Récupérer la plaque, ajouter le mélange MS2/PK puis, '
                 'placer la plaque dans le KinkFisher. ')
