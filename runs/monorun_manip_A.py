@@ -274,11 +274,11 @@ def run(ctx):
     ctx.pause("Tout le matériel doit être en place.")
     ctx.pause("Confirmer (Resume) pour démarrer {} puits pour le protocole, sinon appuyer sur Stop".format(num_samples))
 
-    def comment(msg):
+    def title(msg):
         longueur = len(msg)
-        ctx.comment("*" * longueur)
-        ctx.comment(msg)
-        ctx.comment("*" * longueur)
+        ctx.title("*" * longueur)
+        ctx.title(msg)
+        ctx.title("*" * longueur)
 
 
     # sources of samples : 4 racks of Eppendorf
@@ -288,9 +288,8 @@ def run(ctx):
     rack4in1_name = 'opentrons_24_tuberack_eppendorf_1.5ml_safelock_snapcap'
     source_racks = [ctx.load_labware(rack4in1_name, slot, 'Echantillons ' + str(i + 1))
                     for i, slot in enumerate(['4', '5', '1', '2'])]
-    # pour solution de binding/lyse
-    reservoir = ctx.load_labware('opentrons_10_tuberack_falcon_4x50ml_6x15ml_conical', '6',
-                                 'reagent reservoir')
+
+
     # Tips
     tipracks1000 = [ctx.load_labware('opentrons_96_tiprack_1000ul', slot, 'Pointes 1000µl')
                     for slot in ['10']]
@@ -300,11 +299,14 @@ def run(ctx):
                                 tip_racks=tipracks1000)
 
     # setup samples and reagents
-
+    # pour solution de binding/lyse
+    reservoir = ctx.load_labware('opentrons_10_tuberack_falcon_4x50ml_6x15ml_conical', '6',
+                                 'reagent reservoir')
+    lys_buffer = reservoir.wells('B4')
     # destination wells list. Destination sur la plaque de DeepWell. Leave controls empty
 
     # load labware (lw)  #  TODO : mettre la vraie définition de plaque de Thermo
-    # lw : stads for labware
+    # lw : stands for labware
     deepwell_lw = ctx.load_labware('nest_96_wellplate_2ml_deep', '3', 'Deepwell plate')
     # *_w_list : stands for "list of Wells"
     dests_w_lst = grouped_reverse(deepwell_lw.wells(), 8)[:num_samples]
@@ -314,7 +316,7 @@ def run(ctx):
     placer = well_generator_for_4_racks_of_24(source_racks)
     sample_w_lst = [placer.__next__() for _ in range(num_samples)]
 
-    lys_buffer = reservoir.wells('B4')
+
     # tip log
     tip_log = {'count': {}}
     folder_path = '/data/A'
@@ -355,9 +357,9 @@ resuming.')
 
     # transfer lysis/binding buffer
     if experiment["plate_binding_solution"]:
-        comment("Transfer Binding Solution")
+        title("Transfer Binding Solution")
         for i, d in enumerate(dests_w_lst):
-            ctx.comment("COM : " + str(i + 1))
+            ctx.title("COM : " + str(i + 1))
             pick_up(p1000)
             p1000.transfer(vol_lys_buffer, lys_buffer[i // 24], d.bottom(5),
                            air_gap=50, new_tip='never')
@@ -366,7 +368,7 @@ resuming.')
 
     # transfer samples
     if experiment["transfert_samples"]:
-        comment("Transfer sample")
+        title("Transfer sample")
         for s, d in zip(sample_w_lst, dests_w_lst):
             pick_up(p1000)
             # Régler la hauteur avec : .bottom().move(Point(x=(-1.5))))
