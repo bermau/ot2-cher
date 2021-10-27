@@ -276,9 +276,9 @@ def run(ctx):
 
     def title(msg):
         longueur = len(msg)
-        ctx.title("*" * longueur)
-        ctx.title(msg)
-        ctx.title("*" * longueur)
+        ctx.comment("*" * longueur)
+        ctx.comment(msg)
+        ctx.comment("*" * longueur)
 
 
     # sources of samples : 4 racks of Eppendorf
@@ -359,7 +359,7 @@ resuming.')
     if experiment["plate_binding_solution"]:
         title("Transfer Binding Solution")
         for i, d in enumerate(dests_w_lst):
-            ctx.title("COM : " + str(i + 1))
+            ctx.comment("COM : " + str(i + 1))
             pick_up(p1000)
             p1000.transfer(vol_lys_buffer, lys_buffer[i // 24], d.bottom(5),
                            air_gap=50, new_tip='never')
