@@ -8,13 +8,13 @@ version libre de PyCharm.
 
 Je vais donc conserver mon script sous format d'un fichier python dans lequel on définit la fonction run().
 
-Le nom du fichier */py est de type "monorun_xxx.py". Le nom du JNB sera "xxx".
+Le nom du fichier */py est de type "xxx_monorun.py". Le nom du JNB sera "xxx".
 
 J'ai créé un modèle de JNB, verrouillé, dont on commence par en faire une copie.
 
 Les premières cellules contiennent des commandes pour créer le context de l'OT dans le JNB.
 
-Une cellule tout le fichier "monorun_xxx.py" grâce au mot magique `%load`. 
+Une cellule tout le fichier "xxx_monorun.py" grâce au mot magique `%load`. 
 La cellule suivante est pour exécuter le run().
 La suivante permet de voir le log de l'objet ctx.
 
