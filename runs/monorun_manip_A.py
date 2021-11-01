@@ -378,7 +378,7 @@ resuming.')
             p1000.drop_tip()
 
     ctx.comment('Récupérer la plaque, ajouter le mélange MS2/PK puis, '
-                'placer la plaque dans le KinkFisher. ')
+                'placer la plaque dans le KingFisher. ')
 
     # track final used tip
     if not ctx.is_simulating():
